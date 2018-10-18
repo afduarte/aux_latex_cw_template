@@ -1,11 +1,12 @@
 % #######################################
+
 % ########### FILL THESE IN #############
 % #######################################
-\def\mytitle{Coursework Report}
-\def\mykeywords{Fill, These, In, So, google, can, find, your, report}
-\def\myauthor{Cool Student}
-\def\contact{4008000@napier.ac.uk}
-\def\mymodule{Module Title (SET00000)}
+\def\mytitle{Set.lystr}
+\def\mykeywords{Advanced, Web, Technologies, Python, Flask, MusicBrainz, AcousticBrainz }
+\def\myauthor{Antero Duarte}
+\def\contact{40211946@live.napier.ac.uk}
+\def\mymodule{Advanced Web Technologies (SET09183)}
 % #######################################
 % #### YOU DON'T NEED TO TOUCH BELOW ####
 % #######################################
@@ -72,6 +73,39 @@
 	stringstyle=\color[rgb]{0.627,0.126,0.941}
 }
 
+% Define JavaScript as a language for lstlistings
+%define Javascript language
+\lstdefinelanguage{JavaScript}{
+keywords={const, let, undefined, try, async, await, typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+keywordstyle=\color{blue}\bfseries,
+ndkeywords={class, export, boolean, throw, implements, import, this},
+ndkeywordstyle=\color{darkgray}\bfseries,
+identifierstyle=\color{black},
+sensitive=false,
+comment=[l]{//},
+morecomment=[s]{/*}{*/},
+commentstyle=\color{purple}\ttfamily,
+stringstyle=\color{red}\ttfamily,
+morestring=[b]',
+morestring=[b]`,
+morestring=[b]"
+}
+ 
+\lstset{
+language=JavaScript,
+extendedchars=true,
+basicstyle=\footnotesize\ttfamily,
+showstringspaces=false,
+showspaces=false,
+numbers=left,
+numberstyle=\footnotesize,
+numbersep=9pt,
+tabsize=2,
+breaklines=true,
+showtabs=false,
+captionpos=b
+}
+
 \thiswatermark{\centering \put(336.5,-38.0){\includegraphics[scale=0.8]{logo}} }
 \title{\mytitle}
 \author{\myauthor\hspace{1em}\\\contact\\Edinburgh Napier University\hspace{0.5em}-\hspace{0.5em}\mymodule}
@@ -85,38 +119,42 @@
     \maketitle
     \begin{abstract}
         %Replace the lipsum command with actual text 
-        \lipsum[2]
+        Set.lystr is a music catalogue exploration/playlist creation tool geared towards musicians who play cover songs. Set.lystr allows its users to search and compare songs and build the ultimate playlist.
     \end{abstract}
     
     \textbf{Keywords -- }{\mykeywords}
     
     \section{Introduction}
-    \paragraph{Referencing}
-    You should cite References like this: \cite{Keshav}. The references are saved in an external .bib file, and will automatically be added to the bibliography at the end once cited.
+    \paragraph{Set.lystr}
+    This web application aims to be more than a music catalogue website. By providing users with acoustic metrics, such as BPM (beats per minute), a song's musical key and others, a user can meticulously plan their their setlist/playlist for the best flow.
     
-    \figuremacro{h}{placeholder}{ImageTitle}{ - Some Descriptive Text}{1.0}
+    \figuremacro{h}{index}{ImageTitle}{ - Home page}{1.0}
+    
+    Apart from said metrics, the website also provides music exploration capabilities, by listing every release created by a selection of well known artists, and every track in each release.
+    If a user is not sure of what they are looking for, they can browse artists and releases. If a user knows exactly what they want, they can search and get a list of artists, releases and tracks that match their search terms.
+	Set.lystr uses MusicBrainz\cite{musicbrainz} as a data source, and links to acoustic data from AcousticBrainz \cite{acousticbrainz}.
+	Once a user has found a song they would like to include in their playlist, they can add it to their personal setlist, which builds up while informing the user of the selected songs metrics.
 	
-	\section{Formatting}
-	Some common formatting you may need uses these commands for \textbf{Bold Text}, \textit{Italics}, and \underline{underlined}.
-	\subsection{LineBreaks}
-	Here is a line
+	\section{Design}
+	This web app was designed in line with modern standards and best practices. All the data gathered is available in the public domain, and the only library used was icono-css\cite{alipoor}, which is a pure css icon library.
+
+	\subsection{Data gathering}
+	Data was gathered by collating a list of artist names from a list of the top 100 pop/rock bands on IMDb\cite{imdb} and my personal spotify playlists.
+	The total number of artists after merging the lists, removing duplicates, removing artist names such as "Various artists" and removing guilty pleasures was 192.
+	Using Node.js\cite{nodejs}, I "scraped" the MusicBrainz API to lookup artists based on their name from the list, as seen on listing \ref{lst:artistLookup} in the appendices.
+	After this I downloaded every release (listing \ref{lst:releaseDownload} in the appendices), every track (listing \ref{lst:trackDownload} in the appendices) and matched each track to their acousticbrainz match, if there was one (listing \ref{lst:acousticbrainzMatch}, \ref{lst:acousticbrainzDownload}, \ref{lst:acousticbrainzParsing} in the appendices).
     
-    Here is a line followed by a double line break.
-	This line is only one line break down from the above, Notice that latex can ignore this
     
-    We can force a break \\ with the break operator.
+	\subsection{Application planning}
+	Once all the data was gathered, I planned what the application was going to be like. I decided which pages I wanted to have:
+	\begin{enumerate}
+	\item Index page
+	\item Artist Browse page
+	\item Release Browse page
+	\item Search results page
+	\end{enumerate}
     
-	\subsection{Maths}
-    Embedding Maths is Latex's bread and butter    
-    
-    {\centering \Large \(
-        J = \begin{bmatrix}
-            \frac{\delta e}{\delta \theta _0}
-            \frac{\delta e}{\delta \theta _1}
-            \frac{\delta e}{\delta \theta _2}
-        \end{bmatrix}
-        = e_{current} - e_{target} 
-    \)\par}
+
 	
 	\subsection{Code Listing}
     You can load segments of code from a file, or embed them directly.
@@ -157,5 +195,355 @@ print a newline\;
 \section{Conclusion}	
 \bibliographystyle{ieeetr}
 \bibliography{references}
-		
+\section{Appendices}
+\subsection{Data gathering code}
+
+\begin{lstlisting}[language=JavaScript, label=lst:artistLookup, caption = Artist name to MusicBrainzID lookup ]
+const mb = require('musicbrainz')
+async function matchToMusicBrainz() {
+    let done = 0
+    // bands => [String] => all the band names gathered
+    const promises = bands.map(async (b) => {
+        try {
+            const [first] = await searchArtists(b)
+            done += 1
+            console.error(`${done}/${bands.length}`)
+            return {
+                id: first.id,
+                name: first.name,
+                country: first.country,
+                lifespan: [first.lifeSpan.begin, first.lifeSpan.end]
+            }
+        } catch (e) {
+            console.error(e)
+        }
+
+    })
+    const results = await Promise.all(promises)
+    results.forEach(r =>{
+        console.log(`"${r.id}","${r.name}","${r.country}","${r.lifespan[0]} ${r.lifespan[1]}"`)
+    })
+}
+// Immediately Invoked Function Expression, because async/await can't be used at top level
+(async ()=>{
+ await matchToMusicBrainz()
+})()
+
+function searchArtists(query, filter, force) {
+    return new Promise((resolve, reject) => {
+        mb.searchArtists(query, filter, force, (err, data) => {
+            if (err) return reject(err)
+            return resolve(data)
+        })
+    })
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, label=lst:releaseDownload, caption = Release fetching from Musicbrainz. Includes cover art url fetching ]
+const mb = require('musicbrainz')
+const fcsv = require('fast-csv')
+const axios = require('axios')
+
+async function getMusicBrainzAlbums() {
+	let done = 0;
+	fcsv.fromPath('./csv/musicbrainzID.csv', {
+		headers: ['id', 'name', 'country', 'lifespan']
+	}).on('data', async ({
+		id
+	}) => {
+		const artist = await lookupArtist(id, ['release-groups'])
+		const albums = artist.releaseGroups.filter(r => r.type == 'Album')
+		const promises = albums.map(async (a) => {
+			let mainrelease,front,back,stage;
+			try {
+				stage = 'relgroup'
+				const {
+					data
+				} = await axios.get(`https://coverartarchive.org/release-group/${a.id}/`);
+				stage = 'coverart-start';
+				mainrelease = (data.release || '').split('/').pop();
+				stage = 'coverart-rel';
+				front = data.images.find(i => i.front).image
+				stage = 'coverart-front';
+				back = data.images.find(i => i.back).image
+				stage = 'coverart-end';
+			} catch (e) {
+				console.error(`failed: ${artist.name} - ${a.title} (${stage}) => ${a.id}`)
+			} finally {
+				switch(stage){
+					case 'coverart-end':
+						// artist id, relgroup id, relgroup name, first release date, main release, front cover, back cover
+						console.log(`"${id}","${a.id}","${a.title}","${a.firstReleaseDate || ''}","${mainrelease}","${front || ''}","${back || ''}"`)
+						break
+					case 'coverart-front':
+						// artist id, relgroup id, relgroup name, first release date, main release, front cover
+						console.log(`"${id}","${a.id}","${a.title}","${a.firstReleaseDate || ''}","${mainrelease}","${front || ''}",""`)
+						break
+					case 'coverart-rel':
+					  // artist id, relgroup id, relgroup name, first release date, main release
+						console.log(`"${id}","${a.id}","${a.title}","${a.firstReleaseDate || ''}","${mainrelease}","",""`)
+						break
+					default:
+						// artist id, relgroup id, relgroup name, first release date
+						console.log(`"${id}","${a.id}","${a.title}","${a.firstReleaseDate || ''}","","",""`)
+				}
+				done += 1
+				console.error(`${done}/192`)
+				return Promise.resolve()
+			}
+		})
+		return Promise.all(promises)
+	})
+}
+
+function lookupArtist(id, links) {
+	return new Promise((resolve, reject) => {
+		mb.lookupArtist(id, links, (err, data) => {
+			if (err) return reject(err)
+			return resolve(data)
+		})
+	})
+}
+\end{lstlisting}
+
+This step gathered errors in lookups and classified them at different stages:
+
+\begin{enumerate}
+\item coverart-end - has all data
+\item coverart-front - has main release and front cover
+\item coverart-rel - has main release
+\item relgroup - has relgroup only
+\end{enumerate}
+
+For the relgroup stage, a lot of the releases are just bootlegs, or live albums, so they can safely be ignored
+For the coverart-rel stage, a lot of them do have cover images, they're just not in the expected format. I picked 2/3 of the more important ones and manually collected that data.
+For the coverart-front stage, we're only missing a back cover, which is not that important
+For the coverart-end stage, we have all data, which is ideal.
+
+Before removing the relgroups, had 2065, after removing 206 relgroups, ended up with 1859
+
+The release lookup listed all songs in a record. At the end of the lookup, 18 did not match, so a second pass was made to download the rest. Code:
+
+\begin{lstlisting}[language=JavaScript, label=lst:trackDownload, caption = Track fetching from musicbrainz ]
+const fcsv = require('fast-csv')
+const mb = require('musicbrainz')
+
+async function getMusicBrainzSongs() {
+	return new Promise((resolve, reject) => {
+		let done = 0;
+		fcsv.fromPath('./csv/albums-full.csv', {
+			headers: ["artist", "relgroup", "relgroup-name", "reldate", "mainrel", "frontcover", "backcover"]
+		}).on('data', async ({
+			mainrel
+		}) => {
+			const release = await lookupRelease(mainrel, ['recordings'])
+			release.mediums.forEach(m => {
+				const format = m.format && m.format['#'] ? m.format['#'] : m.position;
+				m.tracks.forEach(t => {
+					try {
+						// release id, medium, track id, track name, position, length
+						console.log(`"${mainrel}","${format.replace(/"/g,"'")}","${t.recording.id}","${t.recording.title}","${t.position}","${t.length}"`)
+					} catch (e) {
+						console.error(`failed: ${t.recording.id} => ${e.message}`)
+					}
+				});
+			});
+			done += 1;
+			console.error(`${done}/1858`)
+		}).on('end', () => {
+			resolve(true)
+		})
+	})
+}
+
+
+(async () => {
+	await getMusicBrainzSongs()
+})()
+
+function lookupRelease(id, links) {
+	return new Promise((resolve, reject) => {
+		mb.lookupRelease(id, links, (err, data) => {
+			if (err) return reject(err)
+			return resolve(data)
+		})
+	})
+}
+
+\end{lstlisting}
+
+After this, the songs were matched to records in acousticbrainz, a website which holds acoustic data about these songs. The following fields were recorded:
+
+beats per minute, average loudness, chord change rate, chord key, chord scale, song key, song scale, key strength
+
+with the following code:
+
+\begin{lstlisting}[language=JavaScript, label=lst:acousticbrainzMatch, caption = Matching individual tracks in musicbrainz with entries in acousticbrainz ]
+const fcsv = require('fast-csv')
+const axios = require('axios')
+
+async function getAcousticBrainz() {
+	let done = 0;
+	const promises = [];
+	let row = 0;
+	fcsv.fromPath('./csv/tracks.csv', {
+		headers: ["release", "medium", "track", "name", "position", "length"]
+	}).on('data', async ({
+		track
+	}) => {
+		const elem = (async (currRow) => {
+			return new Promise(async (resolve, reject) => {
+				try {
+					await new Promise((r) => {
+						setTimeout(r(), (row % 10) * 100)
+					})
+					const {
+						data
+					} = await axios.get(`https://acousticbrainz.org/api/v1/${track}/low-level`)
+					const bpm = (data && data.rhythm && data.rhythm.bpm) || "0"
+					const loud = (data && data.lowlevel && data.lowlevel.average_loudness) || "0"
+					const chordchange = (data && data.tonal && data.tonal.chords_changes_rate) || "0"
+					const chordkey = (data && data.tonal && data.tonal.chords_key) || ""
+					const chordscale = (data && data.tonal && data.tonal.chords_scale) || ""
+					const keykey = (data && data.tonal && data.tonal.key_key) || ""
+					const keyscale = (data && data.tonal && data.tonal.key_scale) || ""
+					const keystr = (data && data.tonal && data.tonal.key_strength) || "0"
+					console.log(`"${track}","${bpm}","${loud}","${chordkey} ${chordscale}","${chordchange}","${keykey} ${keyscale}","${keystr}"`)
+					done += 1
+					console.error(`${done}/23519`)
+					resolve(true)
+				} catch (e) {
+					console.error(`failed (${row}): ${track} => ${e.message}`)
+				}
+			})
+		})(row)
+		promises.push(elem)
+		row++
+	}).on('end', () => {
+		return Promise.all(promises)
+	})
+}
+
+
+(async () => {
+	await getAcousticBrainz()
+})()
+\end{lstlisting}
+
+Out of the original 23519 songs gathered from the previous step, 3587 were not found in acousticbrainz, because acousticbrainz does not have an entry for 100\% of the songs in musicbrainz.
+After a while, because the volume of calls was so big, acousticbrainz started responding with 50x errors, but by recording these errors and doing a 2nd and a 3rd pass, I managed to download the rest of the songs, with the total count being 19932.
+
+Way into the server building, I realised I forgot to download a field that I wanted to have, danceability.
+So I partially re-wrote the code above to download the whole json file for the song's acoustics, so I could just go through the files if I realised I forgot something else.
+
+\begin{lstlisting}[language=JavaScript, label=lst:acousticbrainzDownload, caption = Downloading the whole json file for each acousticbrainz entry ]
+const fcsv = require('fast-csv')
+const axios = require('axios')
+
+async function downloadAcousticBrainz() {
+	let done = 0;
+	const promises = [];
+	let row = 0;
+	fcsv.fromPath('./csv/fullbrainz.csv', {
+		headers: ["release", "medium", "track", "name", "position", "length"]
+	}).on('data', async ({ track }) => {
+		const elem = (async (currRow) => {
+			return new Promise(async (resolve, reject) => {
+				try {
+					const exists = await fileExists(`./acoustics/${track}.json`)
+
+					if (!exists) {
+						await new Promise((r) => {
+							setTimeout(r(), (currRow % 10) * 100)
+						})
+						const {
+							data
+						} = await axios.get(`https://acousticbrainz.org/api/v1/${track}/low-level`)
+						fs.writeFile(`./acoustics/${track}.json`, JSON.stringify(data),(err)=>{
+							if(!err){
+								done+= 1
+								console.log(`${done}/19933`)
+								resolve(true);
+							}else{
+								throw err
+								resolve(true)
+							}
+						});
+					}else{
+						done+=1
+						console.log(`skipping ${track}, done: ${done}/19933`)
+					}
+				} catch (e) {
+					console.error(`failed (${currRow}): ${track} => ${e.message}`)
+				}
+			})
+		})(row)
+		promises.push(elem)
+		row++
+	}).on('end', async () => {
+		promises.push(new Promise((r) => {
+			setTimeout(() =>{
+				console.log("waiting 60 secs for any unresolved promise to resolve")
+				r();
+			},  60000)
+		}))
+		return Promise.all(promises)
+	})
+}
+
+
+(async () => {
+	await downloadAcousticBrainz()
+})()
+\end{lstlisting}
+
+This code also allows for multiple passes to be executed without messing with logs, which means I could run this in an infinite loop, where I waited about 10 minutes to let the acousticbrainz servers come back after getting 50x errors.
+
+Also while doing this, I realised that even after a few passes, I was only getting maximum 19048 files, which lead me to investigate. I realised that there are duplicate entries in the tracks.csv file, which made it seem like there are more songs than the 19048
+
+After that I created a function that would go through all downloaded files and actually gather the metrics I was looking for:
+
+\begin{lstlisting}[language=JavaScript, label=lst:acousticbrainzParsing, caption = Parsing the acousticbrainz files to turn the relevant metrics into csv format ]
+const fcsv = require('fast-csv');
+const axios = require('axios');
+const { promisify } = require('util');
+const fs = require('fs');
+const fileExists = promisify(fs.exists);
+const readdir = promisify(fs.readdir);
+
+const readFile = promisify(fs.readFile)
+async function parseAcousticBrainz() {
+	const files = await readdir("./acoustics");
+	// print the headers
+	console.log('"id","bpm","loudness","chord_key","chord_change_rate","song_key","key_strength","danceability","dynamic_complexity"')
+	files.forEach(async name => {
+		try {
+			const file = await readFile('./acoustics/' + name)
+			// Remove the .json bit from the file name to get the ID back
+			const id = name.substring(0, name.length - 5)
+			const data = JSON.parse(file);
+			const bpm = (data && data.rhythm && data.rhythm.bpm) || "0"
+			const danceability = (data && data.rhythm && data.rhythm.danceability) || "0"
+			const loud = (data && data.lowlevel && data.lowlevel.average_loudness) || "0"
+			const dc = (data && data.lowlevel && data.lowlevel.dynamic_complexity) || "0"
+			const chordchange = (data && data.tonal && data.tonal.chords_changes_rate) || "0"
+			const chordkey = (data && data.tonal && data.tonal.chords_key) || ""
+			const chordscale = (data && data.tonal && data.tonal.chords_scale) || ""
+			const keykey = (data && data.tonal && data.tonal.key_key) || ""
+			const keyscale = (data && data.tonal && data.tonal.key_scale) || ""
+			const keystr = (data && data.tonal && data.tonal.key_strength) || "0"
+			console.log(`"${id}","${bpm}","${loud}","${chordkey} ${chordscale}","${chordchange}","${keykey} ${keyscale}","${keystr}","${danceability}","${dc}"`)
+		} catch (e) {
+			console.error(`Failed: ${name} => ${e.message}`)
+		}
+	})
+}
+
+
+(async () => {
+	await parseAcousticBrainz()
+})()
+
+\end{lstlisting}
+
 \end{document}
