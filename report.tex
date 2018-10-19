@@ -1,5 +1,4 @@
 % #######################################
-
 % ########### FILL THESE IN #############
 % #######################################
 \def\mytitle{Set.lystr}
@@ -132,21 +131,22 @@ captionpos=b
     
     Apart from said metrics, the website also provides music exploration capabilities, by listing every release created by a selection of well known artists, and every track in each release.
     If a user is not sure of what they are looking for, they can browse artists and releases. If a user knows exactly what they want, they can search and get a list of artists, releases and tracks that match their search terms.
-	Set.lystr uses MusicBrainz\cite{musicbrainz} as a data source, and links to acoustic data from AcousticBrainz \cite{acousticbrainz}.
+	Set.lystr uses MusicBrainz \cite{journals/expert/Swartz02} as a data source, and links to acoustic data from AcousticBrainz  \cite{conf/ismir/PorterBKTS15}.
 	Once a user has found a song they would like to include in their playlist, they can add it to their personal setlist, which builds up while informing the user of the selected songs metrics.
 	
 	\section{Design}
-	This web app was designed in line with modern standards and best practices. All the data gathered is available in the public domain, and the only library used was icono-css\cite{alipoor}, which is a pure css icon library.
+	This web app was designed in line with modern standards and best practices. All the data gathered is available in the public domain, and the only library used was icono-css \cite{Alipoor}, which is a pure css icon library.
 
 	\subsection{Data gathering}
-	Data was gathered by collating a list of artist names from a list of the top 100 pop/rock bands on IMDb\cite{imdb} and my personal spotify playlists.
+	Data was gathered by collating a list of artist names from a list of the top 100 pop/rock bands on IMDb \cite{The 100 Greatest Pop/Rock Bands} and my personal spotify playlists.
 	The total number of artists after merging the lists, removing duplicates, removing artist names such as "Various artists" and removing guilty pleasures was 192.
-	Using Node.js\cite{nodejs}, I "scraped" the MusicBrainz API to lookup artists based on their name from the list, as seen on listing \ref{lst:artistLookup} in the appendices.
+	Using Node.js\cite{Node js Foundation}, I "scraped" the MusicBrainz API to lookup artists based on their name from the list, as seen on listing \ref{lst:artistLookup} in the appendices.
 	After this I downloaded every release (listing \ref{lst:releaseDownload} in the appendices), every track (listing \ref{lst:trackDownload} in the appendices) and matched each track to their acousticbrainz match, if there was one (listing \ref{lst:acousticbrainzMatch}, \ref{lst:acousticbrainzDownload}, \ref{lst:acousticbrainzParsing} in the appendices).
     
     
 	\subsection{Application planning}
 	Once all the data was gathered, I planned what the application was going to be like. I decided which pages I wanted to have:
+
 	\begin{enumerate}
 	\item Index page
 	\item Artist Browse page
@@ -154,43 +154,20 @@ captionpos=b
 	\item Search results page
 	\end{enumerate}
     
-
+    I decided to create a base template, which would be extended by every other page. Having learnt and worked with frontend javascript libraries that use the concept of self contained components that are placed on containers\cite{abramov_presentational_2015}, I tried to follow the same mindset for this app.
+    Rather than having frontend defined components, I applied the Single File component architecture, as seen on Vue.js \cite{Vue.js}.
+    For this, I created \textit{content}, \textit{extra_styles} and \textit{extra_scripts} blocks on my base.html file, which allowed me to generate page specific javascript and CSS that gets injected at runtime. This makes each template file self contained and means that the code is close to where it is used, rather than having monolithic javascript and css files that turn into spaghetti really quickly \cite{spaghetti}. For instances when the code can be reused, it is moved to the monolithic files, because DRY(Don't Repeat Yourself \cite{hunt2000the}) can sometimes trump keeping the code close to where it is used, because it introduces a single point of maintenance.
+    This might introduce a runtime penalty, since the template which includes the styles/script has to be compiled, but it is negligible, especially considering that there is nothing complex about rendering these plain strings.
+    
+    \subsection{URL Structure}
+    The URL structure for this kind of application is well documented and has been implemented widely. Moesif\cite{Moesif} provides a good guide for some of the common problems with API/URL design.
+    The following figure shows the URL mapping in the web application.
+    
+    [CREATE IMAGE FOR URL MAPPING]
 	
 	\subsection{Code Listing}
     You can load segments of code from a file, or embed them directly.
-    
-\begin{lstlisting}[caption = Hello World! in c++]
-#include <iostream>
-
-int main() {
-    std::cout << "Hello World!" << std::endl;
-    std::cin.get();
-    return 0;
-}
-\end{lstlisting}
-
-\lstinputlisting[caption = Hello World! in python script]{./sourceCode/hello.py}
-    
-\subsection{PseudoCode}
-
-\begin{algorithm}[h]
-\For{$i = 0$ \KwTo $100$}{
- print\_number = true\;
-\If{i is divisible by 3}{
- print "Fizz"\;
- print\_number = false\;
-}
-\If{i is divisible by 5}{
- print "Buzz"\;
- print\_number = false\;
-}
-\If{print\_number}{
-    print i\;
-}
-print a newline\;
-}
-\caption{FizzBuzz}
-\end{algorithm}
+   
 	
 \section{Conclusion}	
 \bibliographystyle{ieeetr}
@@ -372,11 +349,8 @@ function lookupRelease(id, links) {
 
 \end{lstlisting}
 
-After this, the songs were matched to records in acousticbrainz, a website which holds acoustic data about these songs. The following fields were recorded:
-
-beats per minute, average loudness, chord change rate, chord key, chord scale, song key, song scale, key strength
-
-with the following code:
+After this, the songs were matched to records in acousticbrainz, a website which holds acoustic data about these songs. The following fields were recorded: [beats per minute, average loudness, chord change rate, chord key, chord scale, song key, song scale, key strength]
+Using the following code:
 
 \begin{lstlisting}[language=JavaScript, label=lst:acousticbrainzMatch, caption = Matching individual tracks in musicbrainz with entries in acousticbrainz ]
 const fcsv = require('fast-csv')
