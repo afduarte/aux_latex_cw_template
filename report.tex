@@ -196,6 +196,7 @@ captionpos=b
 	 \subparagraph{One} extra that is not present in the maps is that when a release page is accessed by clicking a track name, said track is highlighted in the release page. This happens because clicking on a track does not make it obvious that the user will navigate to the release page.
 	 
 \section{Enhancements}
+\label{sec:enhancements}
 \blockquote{It's not a bug, it's a feature}
 
 	There are several things I would have done if I had more time to develop this project. A lot of the data that I gathered, I ended up not using, or at least in the way I intended to use it. 
@@ -228,11 +229,14 @@ def track_distance(a, b):
 	\subsection{Dedicated track page}
 	Similarly to the setlist page, the amount of effort needed to create a track page, when compared to the functionality that would be in that page, just did not justify its creation. 
 	
+	\subsection{Direct connection to data APIs}
+	All of the data collection process could have been avoided if a direct connection was made to the APIs offered by both data sources. This would have opened up a lot of possibilities, considering that the artist catalogue is quite limited, but on the other hand, it would have made the range of different outcomes too unwieldy, which would have slowed development because the code would have to accommodate for gaps in the data that were filled during the data gathering stage.
+	
 \section{Crtitical evaluation}
 	While I'm happy with the current state of Set.lystr, several things about it make me want to spend more time on it, even if just for fun/portfolio building.
 
 	\subsection{Architecture}
-	One of the things I enjoy the most about developing projects such as this one is to look at the holistic  system architecture. While being a relatively simple project that is composed of a single codebase, it's architecture is also rather simplistic. While there are things about this project that might not pass the scalability test, for example not splitting different routes into different files, I personally consider this a good architecture when considering the broader context. This application and its development have a scope, and one of the best skills when thinking about the architecture of an application is to take into account the balance of time vs features.
+	One of the things I enjoy the most about developing projects such as this one is to look at the holistic  system architecture. While being a relatively simple project that is composed of a single codebase, it's architecture is also rather simplistic. While there are things about this project that might not pass the scalability test, for example not splitting different routes into different files, I personally consider this a good architecture when taking into account the wider context. This application and its development have a scope, and one of the best skills when thinking about the architecture of an application is to take into account the balance of time vs features.
 	\paragraph{I could} have made this application more scalable. I could have decoupled the frontend from the backend, which would mean less work on the server side. I could have deployed n instances of the application and load balance them. But calling that overkill would be an understatement.
 	\paragraph{That being said,} I am particularly happy about features such as the streaming search results function, which is backed by a generator function that yields results as they become available. This improves the perceived loading times, and when matched with client-side functionality that sorts the results as they come, creates a good User Experience.
 	\subparagraph{Another example} that I am particularly happy with is the balance between AJAX functionality for improved user experience and the fall-backs that are in place for the case where a user is not running javascript. While it could be argued that users whose browsers don't support javascript would not benefit from the modern CSS in the page, having these fall-back capabilities means that even with a broken layout and a few ugly pages (I'm looking at you, default Flask redirect-after-form-submit page), a user is fully capable of using the system. This is also true for screen readers, which makes the web application more accessible.
@@ -247,11 +251,18 @@ def track_distance(a, b):
 	\paragraph{While} string comparison using the naive python builtin \textit{SequenceMatcher}  stems from a limitation imposed as part of the coursework, of not being able to install additional libraries, if I had put some more effort into the search functionality, better results would have been possible. For example, for the cases where an artist has a self-titled release (which is very common, e.g: Pearl Jam by Pearl Jam), due to the text index being just a dictionary of \textit{string} to \textit{string}, whatever comes first is overridden by what comes after, which means searching for Pearl Jam would never return the artist, when more often than not, that is the desired outcome.
 	\subparagraph{This could be fixed} quite easily by just making the text index a dictionary of \textit{string} to \textit{list of string}, but I decided that this would come on a following iteration of the development, due to time constraints.
 	
-\section{Conclusion}	
+\section{Personal Evaluation}
+	Web development is an area of computing that has always fascinated me. Partly because of how easy it is nowadays to create something that can be accessible by the whole world, but also because it can be quite challenging to adhere to living standards and create a web application that follows all best practices in the industry.
+	That being said, I work as a part-time web developer, so a lot of these best-practices are ingrained in the way I develop a project such as this one.
+	\paragraph{This can be a blessing and a curse.} It is very good to know my way around a codebase and to be able to understand the basics of a new framework in a programming language that I have barely used before in a matter of minutes, as was the case with Flask, simply because I understand the underlying concepts that are common to most web applications. But this brings with it a sense of perfectionism and always trying to push myself past the next boundary that can work against me. I am guilty of having developed coursework applications that go beyond demonstrating that I am capable of achieving the level sought after by the marker, simply because that is the bar I have set for myself and my work outside of university.
+	\paragraph{In this coursework} in particular, I would say that I was able to strike a balance between achieving the learning outcomes proposed in the coursework description and achieving a level of self-fulfilment that comes from doing the best I can. As mentioned in the enhancements section\ref{sec:enhancements}, I realise that there are things I could have made prettier or more functional, or better in general. But I also realise that I introduced challenges for myself that were out of the scope of the coursework but that I decided to do in order to improve my abilities (for example, not using frontend libraries).
+	\paragraph{In the end,} I am happy about where I got to because I can see a clear path to improve the things I am not completely happy about with this coursework. I was able to manage the whole project from start to end, balance that with the rest of my university workload and a particularly busy period at my job.
+	
 \bibliographystyle{ieeetr}
 \bibliography{references}
+
 \section{Appendices}
-\subsection{Data gathering code}
+	\subsection{Data gathering code}
 
 \begin{lstlisting}[language=JavaScript, label=lst:artistLookup, caption = Artist name to MusicBrainzID lookup ]
 const mb = require('musicbrainz')
