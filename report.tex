@@ -44,6 +44,8 @@
 \usepackage{amsmath}
 %PseudoCode
 \usepackage{algorithm2e}
+%URLS%
+\usepackage{hyperref}
 
 \usepackage{csquotes}
 
@@ -107,6 +109,9 @@ showtabs=false,
 captionpos=b
 }
 
+% create a footref command that references footnotes as superscript text %
+\newcommand{\footref}[1]{\textsuperscript{\ref{#1}}}
+
 \thiswatermark{\centering \put(336.5,-38.0){\includegraphics[scale=0.8]{logo}} }
 \title{\mytitle}
 \author{\myauthor\hspace{1em}\\\contact\\Edinburgh Napier University\hspace{0.5em}-\hspace{0.5em}\mymodule}
@@ -126,11 +131,11 @@ captionpos=b
         \textbf{Keywords -- }{\mykeywords}
 
         \section{Introduction}
-        \paragraph{Flickr}, like many social media platforms, prioritises content from users who post regularly. This means that the same user, with the same following and a comparable quality photo is more likely to get more exposure and better reception for a photo that is posted in the 10th day of a 10 day streak of posting 1 or more photos per day, than one posted on the first day.
+        \paragraph{Flickr \cite{Flickr}}, like many social media platforms, prioritises content from users who post regularly. This means that the same user, with the same following and a comparable quality photo is more likely to get more exposure and better reception for a photo that is posted in the 10th day of a 10 day streak, than one posted on the first day.
 
         \figuremacro{h}{home}{Flickr Uploadr}{ - Home page}{1.0}
 
-        This application, by allowing users to schedule posts for later days, allows people who see photography as a hobby to enjoy the same level of exposure within the Flickr platform. Fot photography professionals, it allows them to batch edit photos and not have to worry about being consistent with their posts and focus more on their actual work.
+        This application, by allowing users to schedule posts for later days, allows people who see photography as a hobby to enjoy the same level of exposure within the Flickr platform. For photography professionals, it allows them to batch edit photos and not have to worry about being consistent with their posts and focus more on the rest of their work.
 
         \subparagraph{Flickr Uploadr} uses the Flickr REST API \cite{Flickr_Services} to upload photos as the logged in user.
         It uses a microsevice oriented architecture and decouples the frontend from the backend \cite{Microservices_and_SPAs_2017}.
@@ -141,19 +146,19 @@ captionpos=b
         \figuremacro{h}{app}{Flickr Uploadr}{ - App home}{1.0}
 
         \subsection{Architectural Overview}
-        \paragraph{The backend} uses python Flask \cite{Flask} for the web related activities, an embedded SQLite\cite{SQLite} database to store user information and uploading jobs (an uploading job is a photo and all of the associated settings needed to upload said photo to Flickr), and the python threading module to run a separate Thread that processes the uploading jobs.
+        \paragraph{The backend} uses python Flask \cite{Flask} for the web related activities, an embedded SQLite\cite{SQLite} database to store user information and uploading jobs \footnote{\label{ft:uploading_job} An uploading job is a photo and all of the associated settings needed to upload said photo to Flickr}.
 
-        \paragraph{The frontend} uses a frontend javascript framework called Vue.js \cite{Vue.js}. It is a framework that is increasing in popularity and is considered one of the top 3 javascript frontend SPA frameworks, alongside React.js \cite{React.js} and Angular.js \cite{Angular.js}.
+        \paragraph{The frontend} uses Vue.js \cite{Vue.js}, a javascript framework. It is a framework that is increasing in popularity and is considered one of the top 3 javascript frontend SPA frameworks, alongside React.js \cite{React.js} and Angular.js \cite{Angular.js}.
         In my opinion, and the reason why I like it is that it stands exactly in the middle between the other two. Where Angular is too enterprise focused with little room for customisation in terms of code organisation and design patterns in favor of corporate-oriented standardisation, and React.js makes no assumptions and offers little in the way of suggesting best practice, leaving that for the developer to deal with.
-        Vue.js offers a standardised way of organising code, by providing single-file components \cite{single_file_components}, which include markup, logic and presentation in the same file, but at the same time, it can be used in more complex applications, with state \cite{Vuex} and route \cite{Vue_Router} management or simpler applications as a substitute for older DOM manipulation based solutions like jQuery \cite{jquery_vue}
+        Vue.js offers a standardised way of organising code, by providing single-file components \cite{single_file_components}, which include markup, logic and presentation in the same file, but at the same time, it can be used in more complex applications, with state \cite{Vuex} and route \cite{Vue_Router} management or simpler applications as a substitute for older Document Object Model manipulation based solutions like jQuery \cite{jquery_vue}.
 
 
         \subsection{Database and data modelling}
-        As mentioned before, the database is a SQLite presisted instance that is accessed from the code through the Peewee Object Relational Mapper \cite{peewee}. The database schema is as follows:
+        As mentioned before, the database is a SQLite disk persisted instance that is accessed from the code through the Peewee Object Relational Mapper \cite{peewee}. The database schema is as seen in figure \ref{fig:db}. 
 
         \figuremacro{h}{db}{Database Schema}{}{0.6}
 
-        Figure \ref{fig:db} shows 2 main tables, user and job. Peewee recommends that auto-incrementing IDs are used as primary keys for the database tables, but since this is still widely debated and a divisive issue \cite{primary_key_choosing} I decided to go with what we learned in the 2nd year Database model, that when natural primary keys exist, they should be used in favor of surrogate keys.
+        Figure \ref{fig:db} shows 2 main tables, user and job. Peewee recommends that auto-incrementing IDs are used as primary keys for the database tables, but since there is no canonical answer to this question \cite{primary_key_choosing}, I decided to go with what we learned in the 2nd year Database module, that when natural primary keys exist, they should be used in favor of surrogate keys.
 
         Although this is an advantage in terms of data design, it introduced a workaround, since peewee supports the opposing view.
         \begin{lstlisting}[label=lst:peewee_save, language = Python, caption = Peewee save function workaround]
@@ -166,17 +171,38 @@ captionpos=b
     			        kwargs["force_insert"] = True
     			    return super(BaseModel, self).save(*args, **kwargs)
         \end{lstlisting}
-        The code excerpt at \ref{lst:peewee_save} showsthea workaround for peewee's default save function. As explained in the documentation \cite{peewee_pkeys}, self managed primary keys need the argument \texttt{force\_insert} to be true for every save.
+        The code excerpt \ref{lst:peewee_save} shows the workaround for peewee's default save function. As explained in the documentation \cite{peewee_pkeys}, self managed primary keys need the argument \texttt{force\_insert} to be set to \texttt{True} on every save.
 
 
         \subsection{Authentication/Authorisation}
 
-        This application revolves around Flickr, which means users need a flickr account to use the application. Flickr provides an Oauth \cite{oauth} server as part of their API, which means that the amount of data this application needs to keep about a user is minimal. It also takes the pressure away from this app to manage users and passwords.
+        This application extends Flickr, which means users need a Flickr account to use the application. Flickr provides an Oauth \cite{oauth} server as part of their API \cite{Flickr_oauth}, which means that the amount of data this application needs to keep about a user is minimal. It also takes the pressure away from this app to manage users and passwords.
+        The application links a user account to a Flickr \texttt{user\_nsid}, which is Flickr's unique identifier for users. It also stores an Oauth Token, so it can upload photos as the user when scheduled, even if the user is offline. Although it is generally discouraged to store access tokens, it is the only option when scheduling activities on behalf of the user.
 
         \subsection{Decoupled frontend}
+        As mentioned before, this application uses Vue.js to provide a modern, feature-rich interface that connects to the server using a RESTful API \cite{restful_api}. Vue.js is a reactive library, which means that changes to the application state will trigger components that receive the state to re-render. In practice this means that a developer does not have to manually listen to events in the DOM\footnote{\label{ft:DOM}Document Object Model}, to trigger changes to the DOM\footref{ft:DOM}. This enables faster development and less time debugging/dealing with DOM\footref{ft:DOM} quirks.
 
+        \subsection{Application functionality}
+        Upon logging in, a user can upload images to the server by using the file drop box, provided by \texttt{vue-dropzone}\cite{vue-dropzone}, which is a plugin that implements Dropzone.js as a Vue component. Uploaded images automatically generate a job ID (v4 UUID\cite{itu_uuid}) and the job fields are set to their defaults (\texttt{title='name\_of\_the\_uploaded\_file'}, \texttt{description=''}, \texttt{tags=''}, \texttt{upload\_time=current\_time + 1 day}). After creating, a job's status is set to \texttt{WAITING}, meaning it is on the queue to be processed shortly after \texttt{current\_time > job.upload\_time} (See figure \ref{fig:waiting-jobs}).\\
+        Shortly after, because there are no guarantees that a job will run exactly on the specified time, for example, if there's a queue of jobs all set to run at 5pm, they will run in the order they come from the database, presumably, row creation time, which essentially means first come, first served.
 
-        \subsubsection{URL Structure}
+        \figuremacro{h}{waiting-jobs}{Jobs waiting to be processed}{}{1.0}
+
+        A job can be edited, so a user can update the photo's title on Flickr, the photo's description on Flickr, the photo's tags on Flickr, and the uploading time (See figure \ref{fig:editing-job}).
+
+        \figuremacro{h}{editing-job}{Jobs editing form}{}{1.0}
+
+        The uploading time is displayed in the form of a calendar, where past dates are blocked (See figure \ref{fig:time-picker}). As shown in the screenshot, taken on the 23rd, days 23 and before are blocked.
+        The reasoning behind blocking the 23rd as well stems from a belief that people using a scheduler should not be putting pressure on the server for immediate/almost immediate uploads.
+
+        \figuremacro{h}{time-picker}{Calendar}{}{1.0}
+
+        This means that a user posting a job for now + 5 minutes is essentially shifting the effort on to the server, rather than waiting 5 minutes and posting the photo manually on Flickr.
+        This is not a hard constraint, and is not checked on the server side, but by introducing an element of friction on the UI \cite{ui_friction}, it discourages users from doing it\footnote{\label{ft:friction} In fact, only a user with knowledge of programming or at least REST could manipulate the request being sent to set a photo to be uploaded on the same day}.
+
+        \subsection{URL Structure}
+        \subsubsection{URL Map}
+        Since this application is based on a REST API, the URL structure is quite simple and has a few conditional branches, as can be seen in Figure \ref{fig:url-map}
 
 
         \figuremacro{h}{url-map}{URL map}{}{1.0}
@@ -188,18 +214,21 @@ captionpos=b
         \figuremacro{h}{nav-map}{Navigation map}{}{1.0}
 
 
-        \subparagraph{One} extra that is not present in the maps is that when a release page is accessed by clicking a track name, said track is highlighted in the release page. This happens because clicking on a track does not make it obvious that the user will navigate to the release page.
+        \subparagraph{Note} the navigation around the Login flow, which as per the oauth spec \cite{oauth}, sends a user to Flickr to authenticate (figure \ref{fig:flickr-login}\footnote{\label{ft:yahoo} At the time of writing, flickr was in the process of transitioning from being owned by Yahoo and using Yahoo's login system, which is why the flickr login screen is a yahoo login screen.}), then send the user to a consent page (figure \ref{fig:flickr-consent}) which authorises the application to perform activities on behalf of the user, and then back to the application, which receives the necessary parameters to request an acces token via url query parameters, and finally redirects the user to the application home page, where the application already has access to user data, as see before on figure \ref{fig:app}, where the user's Flickr full name is shown.
+
+        \figuremacro{h}{flickr-login}{Oauth flow}{ - Flickr/yahoo login\footref{ft:yahoo}}{1.0}
+
+        \figuremacro{h}{flickr-consent}{Oauth flow}{ - Flickr consent page}{1.0}
 
         \section{Enhancements}
         \label{sec:enhancements}
         \blockquote{If it ain't broke, don't fix it. Do improve it though...}
 
-        There are several things I would have done if I had more time to develop this project. A lot of the data that I gathered, I ended up not using, or at least in the way I intended to use it. 
+        There are several things I would have done if I had more time to develop this project. Although the initial idea/functionality is all covered, a few more elements would greatly improve this application. 
 
-        \subsection{Track similarity}	
-        An example of this can be seen in a comment in the model.py file:
-       
-        This function was meant to return the euclidean distance between 2 tracks that are placed on an 8th dimensional plane. It's a very rough attempt at creating a track similarity function. Had I had more time, I would have implemented this function in suggesting tracks to add to the setlist, based on the tracks that a user added previously.
+        \subsection{Tiered user system}	
+        As is, all users are the same to the application, but during development, I had the idea to create a tiered user system, where different usage tiers would have different privileges. For example, there is no limit to the amount of photos a user can upload, but to make this application feasible and free to use, there would have to be restrictions on the amount of images a user can post so the disk usage on the server doesn't grow endlessly. One of the user tiers, could have the user pay for unlimited or a higher cap on storage. This would mean the paid users would be paying for the server/hosting, while free users could still enjoy some of the benefits of the system.\\
+        Introducing a cap on storage would mean that the application would have to keep track of how much disk space a user is currently using, which it doesn't at the time of writing.
 
         \subsection{Setlist flow}
         An idea I had since the start was to measure a setlist's flow.\\
