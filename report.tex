@@ -198,11 +198,15 @@ captionpos=b
         \figuremacro{h}{time-picker}{Calendar}{}{1.0}
 
         This means that a user posting a job for now + 5 minutes is essentially shifting the effort on to the server, rather than waiting 5 minutes and posting the photo manually on Flickr.
-        This is not a hard constraint, and is not checked on the server side, but by introducing an element of friction on the UI \cite{ui_friction}, it discourages users from doing it\footnote{\label{ft:friction} In fact, only a user with knowledge of programming or at least REST could manipulate the request being sent to set a photo to be uploaded on the same day}.
+        This is not a hard constraint, and is not checked on the server side, but by introducing an element of friction on the UI \cite{ui_friction}, it discourages users from doing it\footnote{\label{ft:friction} In fact, only a user with knowledge of programming or at least HTTP/REST could manipulate the request being sent to set a photo to be uploaded on the same day}.
+
+        Once the upload time comes for a photo, it is uploaded to flickr and it's job status updated to \texttt{COMPLETED}. There are also intermediate stages between \texttt{WAITING} and \texttt{COMPLETED}. During the upload a job is marked as \texttt{UPLOADING}, and if there's an error, the job is marked as \texttt{ERRORED}.
+
+				\figuremacro{h}{completed-jobs}{Completed Jobs}{}{1.0}        
 
         \subsection{URL Structure}
         \subsubsection{URL Map}
-        Since this application is based on a REST API, the URL structure is quite simple and has a few conditional branches, as can be seen in Figure \ref{fig:url-map}
+        Since this application is based on a REST API, the URL structure is quite simple, as can be seen in Figure \ref{fig:url-map}. The only page generated server-side is the welcome page. All other routes are either redirects in or out of the oauth flow, or API endpoints that serve data for the Vue frontend to render.
 
 
         \figuremacro{h}{url-map}{URL map}{}{1.0}
@@ -214,7 +218,7 @@ captionpos=b
         \figuremacro{h}{nav-map}{Navigation map}{}{1.0}
 
 
-        \subparagraph{Note} the navigation around the Login flow, which as per the oauth spec \cite{oauth}, sends a user to Flickr to authenticate (figure \ref{fig:flickr-login}\footnote{\label{ft:yahoo} At the time of writing, flickr was in the process of transitioning from being owned by Yahoo and using Yahoo's login system, which is why the flickr login screen is a yahoo login screen.}), then send the user to a consent page (figure \ref{fig:flickr-consent}) which authorises the application to perform activities on behalf of the user, and then back to the application, which receives the necessary parameters to request an acces token via url query parameters, and finally redirects the user to the application home page, where the application already has access to user data, as see before on figure \ref{fig:app}, where the user's Flickr full name is shown.
+        \subparagraph{Note} the navigation around the Login flow, which as per the oauth spec \cite{oauth}, sends a user to Flickr to authenticate (figure \ref{fig:flickr-login}\footnote{\label{ft:yahoo} At the time of writing, flickr was in the process of transitioning from being owned by Yahoo and using Yahoo's login system, which is why the flickr login screen is a yahoo login screen.}), then send the user to a consent page (figure \ref{fig:flickr-consent}) which authorises the application to perform activities on behalf of the user, and then back to the application, which receives the necessary parameters to request an acces token via url query parameters, and finally redirects the user to the application home page, where the application already has access to user data, as seen before on figure \ref{fig:app}, where the user's Flickr full name is shown.
 
         \figuremacro{h}{flickr-login}{Oauth flow}{ - Flickr/yahoo login\footref{ft:yahoo}}{1.0}
 
@@ -230,58 +234,49 @@ captionpos=b
         As is, all users are the same to the application, but during development, I had the idea to create a tiered user system, where different usage tiers would have different privileges. For example, there is no limit to the amount of photos a user can upload, but to make this application feasible and free to use, there would have to be restrictions on the amount of images a user can post so the disk usage on the server doesn't grow endlessly. One of the user tiers, could have the user pay for unlimited or a higher cap on storage. This would mean the paid users would be paying for the server/hosting, while free users could still enjoy some of the benefits of the system.\\
         Introducing a cap on storage would mean that the application would have to keep track of how much disk space a user is currently using, which it doesn't at the time of writing.
 
-        \subsection{Setlist flow}
-        An idea I had since the start was to measure a setlist's flow.\\
-        \paragraph{By flow} here, I mean how one song progresses into the next one. Key changes, beats per minute, loudness and other acoustic metrics that I have access to in the data could be used to calculate how easily one can move from one song to the other. Other data could also be gathered to try to make the flow calculations better.
-        \paragraph{For example,} songs in different tunings sometimes mean that artists have to switch instruments or tune them differently, which breaks the flow in a live concert scenario.
-        Songs with different instruments than the previous one might mean that a band member has to switch instruments or come on/off stage.
-        Songs with a low dynamic complexity (low variation between calm/agitated periods) and high bpm, or high danceability and bpm, might make the band tired after playing a lot of them in a row, which means they would need to rest between songs.
-        \paragraph{These and other} conditions could be made into a program that tries to leverage the elements of different songs to keep a crowd's engagement.
+        \subsection{Plugable storage back-ends}
+        An alternative (or possibly something that could run alongside) the paid tiered user model is to have multiple storage backends that could be connected using SDKs and APIs. It might also bring piece of mind for more security aware users who don't want to trust their images to some random server on the internet.
+        Services like Dropbox \cite{dropbox}, Amazon S3 \cite{s3} and Google Drive \cite{gdrive} offer APIs to store and retrieve files. If the application offered an alternative to disk storage, the running costs could greatly be reduced, meaning the service could stay free of charge, case the user decided to store their photos on their own storage. Then Flickr Uploadr acts merely as a vehicle between a user's personal storage and their Flickr account. 
 
-        \subsection{Data collection}
-        Finally, a feature that could be extremely useful in growing an app like this one would be to collect data about how people are using the website. This could become a big advantage when developing new functionality, and could also enable machine learning based features, if said data was used to train models.
+        \subsection{Sneaky Flickr Uploadr tag}
+        Another idea to raise funds to run the application was to introduce a \texttt{Flickr Uploadr} tag on every photo uploaded through the application. Users would then be given an option to donate towards the running costs of the server in exchange of not having this tag placed on their photos. This is obviously something that might slightly annoy users and a tag is easily removable by a user on Flickr, but the simple fact that a prompt shows up, might raise awareness that even though the service is free, it incurs in development, maintenance and hosting costs for the developer, and donating something towards the running costs could help the service stay up for longer.
+        
+        \subsection{Microservices}
+        While this application follows some rules of microservice-oriented architecture, it could be further broken down, which would mean it would be easier to scale. For example both the thumbnail generation and job uploading functions could be implemented using a message queue worker pattern \cite{message_queue_pattern}, making the bulk of the application way more scalable and leaving only a simple static HTTP server to serve the frontend and a minimal Web Server to turn API calls into messages on the queue and retrieve completed jobs. This could greatly improve the performance of the application on scale, and could mean that more users could be using the application at the same time.
 
-        \subsection{Dedicated setlist page}
-        When creating this application, the initial idea involved a page dedicated to managing the songs in the current setlist. This idea was dropped when due to time constraints I realised that I would not be able to create the necessary mechanisms to have enough functionality that makes it worth having such a page.
-        \paragraph{The setlist page} would include the previously mentioned track suggestion feature, a track reordering (using drag and drop) and overall setlist metrics, such as total running time, and possibly even a dashboard type interface that would show the characteristics of the current playlist.
+        \subsection{Smarter scheduling}
+        Right now, there is a serious risk that everyone schedules photos to be posted at 9am on the 21st of December to mark the start of the winter solstice, and with enough users, this could just overload the server and severely delay or even error some photos being posted. With a smarter scheduling algorithm, some photo uploads could be delayed or anticipated to reduce the stress on the server and the network at that specific time. Again, this could be a feature of donating users, to schedule an exact time, and give free users a window of 30 minutes/1 hour when their photo would be posted
 
-        \subsection{Dedicated track page}
-        Similarly to the setlist page, the amount of effort needed to create a track page, when compared to the functionality that would be in that page, just did not justify its creation. 
+        \subsection{Deeper connection to flickr}
+        This application could offer a much bigger conenction to flickr. For example, as a user posts photos, the application could track which times are better to post photos, by measuring the number of views/likes that photos get when posted at different times. This could go even further and compare a users' average like/view gain/loss to other users and suggest better times to upload photos, based on the photo's reception.
 
-        \subsection{Direct connection to data APIs}
-        All of the data collection process could have been avoided if a direct connection was made to the APIs offered by both data sources. This would have opened up a lot of possibilities, considering that the artist catalogue is quite limited, but on the other hand, it would have made the range of different outcomes too unwieldy, which would have slowed development because the code would have to accommodate for gaps in the data that were filled during the data gathering stage.
+        \section{Critical evaluation}
+        This project is not exactly what I imagined. While certainly the functionality is all there, there are a lot of rough edges. The fact that I chose to build the frontend as a different codebase might have penalised my work in other parts of the project. Since I had to deal with 2 codebases, I feel that some of the work might feel rather unpolished.
+        
+        \subsection{The API}
+        While functional for adding/editing/getting, I feel like the API exposed from this project could have been a bit more fleshed out. There are a few inconsistencies in field names, field types (e.g: uploading time is a string when GETing, but must be a Unix timestamp integer when PUTing). This was a problem I started having when trying to validate on the server side. Essentially it means that I should have planned for a lack of a canonical standard date format, hence Python and Javascript have to translate dates for each other.
+        There are also missing features that are quite obvious, not hard to implement and I just ran out of time, like a \texttt{DELETE /job/<id>} endpoint.
 
-        \section{Crtitical evaluation}
-        While I'm happy with the current state of Set.lystr, several things about it make me want to spend more time on it, even if just for fun/portfolio building.
+        \subsection{The frontend}
+        Although I'm happy with the code quality in the frontend code, I feel like the design feels a bit unpolished. It is not bad, but there are a few elements that seem odd and out of place. I had a few ideas, and asked for help from a proper designer, but like many other things in this project, in the end, just ran out of time. One idea that could turn the frontend upside down was to present uploading jobs in a timeline, rather than just listing them. This could be visually appealing and if done correctly, very functional, as this application hangs around 2 things: photography and time.
 
-        \subsection{Architecture}
-        One of the things I enjoy the most about developing projects such as this one is to look at the holistic  system architecture. While being a relatively simple project that is composed of a single codebase, it's architecture is also rather simplistic. While there are things about this project that might not pass the scalability test, for example not splitting different routes into different files, I personally consider this a good architecture when taking into account the wider context. This application and its development have a scope, and one of the best skills when thinking about the architecture of an application is to take into account the balance of time vs features.
-        \paragraph{I could} have made this application more scalable. I could have decoupled the frontend from the backend, which would mean less work on the server side. I could have deployed n instances of the application and load balance them. But calling that overkill would be an understatement.
-        \paragraph{That being said,} I am particularly happy about features such as the streaming search results function, which is backed by a generator function that yields results as they become available. This improves the perceived loading times, and when matched with client-side functionality that sorts the results as they come, creates a good User Experience.
-        \subparagraph{Another example} that I am particularly happy with is the balance between AJAX functionality for improved user experience and the fall-backs that are in place for the case where a user is not running javascript. While it could be argued that users whose browsers don't support javascript would not benefit from the modern CSS in the page, having these fall-back capabilities means that even with a broken layout and a few ugly pages (I'm looking at you, default Flask redirect-after-form-submit page), a user is fully capable of using the system. This is also true for screen readers, which makes the web application more accessible.
+        \subsection{Code quality}
+        I pride myself in striving for quality code. I always try to code for myself in 2 years, having looked at 2 year old code and cringing at how bad it used to be. I obviously don't know everything and expect to still cringe in 2 years time. The point being, there are things about this project that I am not happy about in terms of code quality. For example, when using the threading module and running the job thread, I think it should have been implemented in a way that the job thread knows when the main application thread is stopped, because when sending a SIGINT to the main program, the threading modules throws an Exception from the join function.
 
-        \subsection{Responsiveness}
-        While responsive to a point, this web application still has some pages that are not optimised for mobile view.
-        One of the worse elements being the setlist, which should be made to take the whole screen when on mobile views.
-        \paragraph{This} not only makes the website less appealing, but also harder to interact with when on mobile devices. This becomes a major problem, when considering that upwards of 60\% of the web's traffic according to statistics from April 2018, are from mobile devices.
-
-        \subsubsection{Sub par search results}
-        When searching for a set of keywords, a user can clearly see that the search results are just not up to the standard that a user has come to expect when using a website. And while this is partly due to users being "spoiled" by great user experiences, such as the ones that big companies/products provide, the truth is that the technology for achieving such functionality is more accessible than ever. Besides dedicated search engines that index all pages in a website, there are libraries that could be used to improve string comparison, which in itself would have made search results better.
-        \paragraph{While} string comparison using the naive python builtin \textit{SequenceMatcher}  stems from a limitation imposed as part of the coursework, of not being able to install additional libraries, if I had put some more effort into the search functionality, better results would have been possible. For example, for the cases where an artist has a self-titled release (which is very common, e.g: Pearl Jam by Pearl Jam), due to the text index being just a dictionary of \textit{string} to \textit{string}, whatever comes first is overridden by what comes after, which means searching for Pearl Jam would never return the artist, when more often than not, that is the desired outcome.
-        \subparagraph{This could be fixed} quite easily by just making the text index a dictionary of \textit{string} to \textit{list of string}, but I decided that this would come on a following iteration of the development, due to time constraints.
+        \subsection{The good bits}
+        Ultimately, I made it work. The application is a proof of concept, but it works. I will be using it, personally while I rebuild it in a way I feel I could present it to the world.
+        The good side of having decoupled the frontend is that I can completely rewrite the backend while using the same frontend.
 
         \section{Personal Evaluation}
-        Web development is an area of computing that has always fascinated me. Partly because of how easy it is nowadays to create something that can be accessible by the whole world, but also because it can be quite challenging to adhere to living standards and create a web application that follows all best practices in the industry.
-        That being said, I work as a part-time web developer, so a lot of these best-practices are ingrained in the way I develop a project such as this one.
-        \paragraph{This can be a blessing and a curse.} It is very good to know my way around a codebase and to be able to understand the basics of a new framework in a programming language that I have barely used before in a matter of minutes, as was the case with Flask, simply because I understand the underlying concepts that are common to most web applications. But this brings with it a sense of perfectionism and always trying to push myself past the next boundary that can work against me. I am guilty of having developed coursework applications that go beyond demonstrating that I am capable of achieving the level sought after by the marker, simply because that is the bar I have set for myself and my work outside of university.
-        \paragraph{In this coursework} in particular, I would say that I was able to strike a balance between achieving the learning outcomes proposed in the coursework description and achieving a level of self-fulfilment that comes from doing the best I can. As mentioned in the enhancements section\ref{sec:enhancements}, I realise that there are things I could have made prettier or more functional, or better in general. But I also realise that I introduced challenges for myself that were out of the scope of the coursework but that I decided to do in order to improve my abilities (for example, not using frontend libraries).
-        \paragraph{In the end,} I am happy about where I got to because I can see a clear path to improve the things I am not completely happy about with this coursework. I was able to manage the whole project from start to end, balance that with the rest of my university workload and a particularly busy period at my job.
+        As evidenced through a very long enhancements section (section \ref{sec:enhancements}), and a complete critical evaluation, there are a lot of things I wish I could have done with this project, so in a way it feels incomplete.
+        But if I must be honest with myself, I should look at the complexities and intricacies of this project.\\
+        Apart from knowing the platform I was interfacing with really well (which admitedly I already did, being a user), I had to understand how the API works, I had to find the right libraries for the project, gain a deeper understanding of the Oauth flow, and then re-learn it since Flickr doesn't implement it exactly like the spec, only to then realise there is a library that does it for me, better than I was doing it at that point. Ups and downs, failures and successes, but such is the life of a developer.
+
+        \subsection{The veredict}
+        In the end I am happy, but not satisfied with the current status of the project and hope to be able to continue work on it. I plan to either rework the parts that I'm not very happy with, or actually re-design the whole application taking into consideration everything mentioned before in the enhancements section. One interesting idea is to try to implement the project as a serverless function as a service application.
+        Ultimately this project shows a lot of promise, but because of some aspects, it doesn't completely deliver. I am commited to keep working on it and make it a full-fledged application.
 
         \bibliographystyle{ieeetr}
         \bibliography{references}
-
-        \section{Appendices}
-        \subsection{Data gathering code}
-
 
         \end{document}
