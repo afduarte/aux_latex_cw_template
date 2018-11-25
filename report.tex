@@ -125,7 +125,7 @@ captionpos=b
 \maketitle
 \begin{abstract}
         %Replace the lipsum command with actual text 
-        Flickr Uploadr is an application that allows users of the photography oriented platform Flickr to schedule photos to be uploaded at a later date. The users conenct their flickr account to the app and can schedule photos to be uploaded and can change the title, description and tags of a photo.
+        Flickr Uploadr is an application that allows users of the photography oriented platform Flickr to schedule photos to be uploaded at a later date. The users connect their flickr account to the app and can schedule photos to be uploaded and can change the title, description and tags of a photo.
         \end{abstract}
 
         \textbf{Keywords -- }{\mykeywords}
@@ -135,10 +135,10 @@ captionpos=b
 
         \figuremacro{h}{home}{Flickr Uploadr}{ - Home page}{1.0}
 
-        This application, by allowing users to schedule posts for later days, allows people who see photography as a hobby to enjoy the same level of exposure within the Flickr platform. For photography professionals, it allows them to batch edit photos and not have to worry about being consistent with their posts and focus more on the rest of their work.
+        This application, by allowing users to schedule posts for later days, allows people who see photography as a hobby to enjoy a higher level of exposure within the platform. For photography professionals, it allows them to batch edit photos and schedule them for upload and not have to worry about being consistent with their posts and focus more on the rest of their work.
 
         \subparagraph{Flickr Uploadr} uses the Flickr REST API \cite{Flickr_Services} to upload photos as the logged in user.
-        It uses a microsevice oriented architecture and decouples the frontend from the backend \cite{Microservices_and_SPAs_2017}.
+        It uses a microsevice-like architecture and decouples the frontend from the backend \cite{Microservices_and_SPAs_2017}.
 
         \section{Design}
         This web app was designed in line with modern standards and best practices.
@@ -146,7 +146,7 @@ captionpos=b
         \figuremacro{h}{app}{Flickr Uploadr}{ - App home}{1.0}
 
         \subsection{Architectural Overview}
-        \paragraph{The backend} uses python Flask \cite{Flask} for the web related activities, an embedded SQLite\cite{SQLite} database to store user information and uploading jobs \footnote{\label{ft:uploading_job} An uploading job is a photo and all of the associated settings needed to upload said photo to Flickr}.
+        \paragraph{The backend} uses python Flask \cite{Flask} for the web server activities, an embedded SQLite\cite{SQLite} database to store user information and uploading jobs \footnote{\label{ft:uploading_job} An uploading job is a photo and all of the associated settings needed to upload said photo to Flickr}.
 
         \paragraph{The frontend} uses Vue.js \cite{Vue.js}, a javascript framework. It is a framework that is increasing in popularity and is considered one of the top 3 javascript frontend SPA frameworks, alongside React.js \cite{React.js} and Angular.js \cite{Angular.js}.
         In my opinion, and the reason why I like it is that it stands exactly in the middle between the other two. Where Angular is too enterprise focused with little room for customisation in terms of code organisation and design patterns in favor of corporate-oriented standardisation, and React.js makes no assumptions and offers little in the way of suggesting best practice, leaving that for the developer to deal with.
@@ -198,7 +198,7 @@ captionpos=b
         \figuremacro{h}{time-picker}{Calendar}{}{1.0}
 
         This means that a user posting a job for now + 5 minutes is essentially shifting the effort on to the server, rather than waiting 5 minutes and posting the photo manually on Flickr.
-        This is not a hard constraint, and is not checked on the server side, but by introducing an element of friction on the UI \cite{ui_friction}, it discourages users from doing it\footnote{\label{ft:friction} In fact, only a user with knowledge of programming or at least HTTP/REST could manipulate the request being sent to set a photo to be uploaded on the same day}.
+        This is not a hard constraint, and is not checked on the server side, but by introducing an element of friction on the UI \cite{ui_friction}, it discourages users from doing it\footnote{\label{ft:friction} In fact, only a user with knowledge of programming or at least HTTP/REST could manipulate the request being sent to set a photo to be uploaded on the same day}. The server will not allow past dates though, validating input to check if \texttt{upload\_time < now}.
 
         Once the upload time comes for a photo, it is uploaded to flickr and it's job status updated to \texttt{COMPLETED}. There are also intermediate stages between \texttt{WAITING} and \texttt{COMPLETED}. During the upload a job is marked as \texttt{UPLOADING}, and if there's an error, the job is marked as \texttt{ERRORED}.
 
@@ -218,7 +218,7 @@ captionpos=b
         \figuremacro{h}{nav-map}{Navigation map}{}{1.0}
 
 
-        \subparagraph{Note} the navigation around the Login flow, which as per the oauth spec \cite{oauth}, sends a user to Flickr to authenticate (figure \ref{fig:flickr-login}\footnote{\label{ft:yahoo} At the time of writing, flickr was in the process of transitioning from being owned by Yahoo and using Yahoo's login system, which is why the flickr login screen is a yahoo login screen.}), then send the user to a consent page (figure \ref{fig:flickr-consent}) which authorises the application to perform activities on behalf of the user, and then back to the application, which receives the necessary parameters to request an acces token via url query parameters, and finally redirects the user to the application home page, where the application already has access to user data, as seen before on figure \ref{fig:app}, where the user's Flickr full name is shown.
+        \subparagraph{Note} the navigation around the Login flow, which as per the oauth spec \cite{oauth}, sends a user to Flickr to authenticate (figure \ref{fig:flickr-login}\footnote{\label{ft:yahoo} At the time of writing, flickr was in the process of transitioning from being owned by Yahoo and using Yahoo's login system, which is why the flickr login screen is a yahoo login screen.}), then send the user to a consent page (figure \ref{fig:flickr-consent}) which authorises the application to perform activities on behalf of the user, and then back to the application, which receives the necessary parameters to request an access token via url query parameters, and finally redirects the user to the application home page, where the application already has access to user data, as seen before on figure \ref{fig:app}, where the user's Flickr full name is shown.
 
         \figuremacro{h}{flickr-login}{Oauth flow}{ - Flickr/yahoo login\footref{ft:yahoo}}{1.0}
 
@@ -239,16 +239,16 @@ captionpos=b
         Services like Dropbox \cite{dropbox}, Amazon S3 \cite{s3} and Google Drive \cite{gdrive} offer APIs to store and retrieve files. If the application offered an alternative to disk storage, the running costs could greatly be reduced, meaning the service could stay free of charge, case the user decided to store their photos on their own storage. Then Flickr Uploadr acts merely as a vehicle between a user's personal storage and their Flickr account. 
 
         \subsection{Sneaky Flickr Uploadr tag}
-        Another idea to raise funds to run the application was to introduce a \texttt{Flickr Uploadr} tag on every photo uploaded through the application. Users would then be given an option to donate towards the running costs of the server in exchange of not having this tag placed on their photos. This is obviously something that might slightly annoy users and a tag is easily removable by a user on Flickr, but the simple fact that a prompt shows up, might raise awareness that even though the service is free, it incurs in development, maintenance and hosting costs for the developer, and donating something towards the running costs could help the service stay up for longer.
+        Another idea to raise funds to run the application was to introduce a \texttt{Flickr Uploadr} tag on every photo uploaded through the application. Users would then be given an option to donate towards the running costs of the server in exchange for not having this tag placed on their photos. This is obviously something that might slightly annoy users and a tag is easily removed by a user on Flickr, but the simple fact that a prompt shows up, might raise awareness that even though the service is free, it incurs in development, maintenance and hosting costs for the developer, and donating something towards the running costs could help the service stay up.
         
         \subsection{Microservices}
-        While this application follows some rules of microservice-oriented architecture, it could be further broken down, which would mean it would be easier to scale. For example both the thumbnail generation and job uploading functions could be implemented using a message queue worker pattern \cite{message_queue_pattern}, making the bulk of the application way more scalable and leaving only a simple static HTTP server to serve the frontend and a minimal Web Server to turn API calls into messages on the queue and retrieve completed jobs. This could greatly improve the performance of the application on scale, and could mean that more users could be using the application at the same time.
+        While this application follows some rules of microservice-oriented architecture, it could be further broken down, which would mean it would be easier to scale. For example both the thumbnail generation and job uploading functions could be implemented using a message queue worker pattern \cite{message_queue_pattern}, making the bulk of the application way more scalable and leaving only a simple static HTTP server to serve the frontend and a minimal Web Server to turn API calls into messages on the queue and retrieve completed jobs. This could greatly improve the performance of the application on scale, and would mean that more users could be using the application at the same time.
 
         \subsection{Smarter scheduling}
         Right now, there is a serious risk that everyone schedules photos to be posted at 9am on the 21st of December to mark the start of the winter solstice, and with enough users, this could just overload the server and severely delay or even error some photos being posted. With a smarter scheduling algorithm, some photo uploads could be delayed or anticipated to reduce the stress on the server and the network at that specific time. Again, this could be a feature of donating users, to schedule an exact time, and give free users a window of 30 minutes/1 hour when their photo would be posted
 
         \subsection{Deeper connection to flickr}
-        This application could offer a much bigger conenction to flickr. For example, as a user posts photos, the application could track which times are better to post photos, by measuring the number of views/likes that photos get when posted at different times. This could go even further and compare a users' average like/view gain/loss to other users and suggest better times to upload photos, based on the photo's reception.
+        This application could offer a much bigger connection to flickr. For example, as a user posts photos, the application could track which times are better to post photos, by measuring the number of views/likes that photos get when posted at different times. This could go even further and compare a users' average like/view gain/loss to other users and suggest better times to upload photos, based on the photo's reception.
 
         \section{Critical evaluation}
         This project is not exactly what I imagined. While certainly the functionality is all there, there are a lot of rough edges. The fact that I chose to build the frontend as a different codebase might have penalised my work in other parts of the project. Since I had to deal with 2 codebases, I feel that some of the work might feel rather unpolished.
@@ -258,14 +258,14 @@ captionpos=b
         There are also missing features that are quite obvious, not hard to implement and I just ran out of time, like a \texttt{DELETE /job/<id>} endpoint.
 
         \subsection{The frontend}
-        Although I'm happy with the code quality in the frontend code, I feel like the design feels a bit unpolished. It is not bad, but there are a few elements that seem odd and out of place. I had a few ideas, and asked for help from a proper designer, but like many other things in this project, in the end, just ran out of time. One idea that could turn the frontend upside down was to present uploading jobs in a timeline, rather than just listing them. This could be visually appealing and if done correctly, very functional, as this application hangs around 2 things: photography and time.
+        Although I'm happy with the code quality in the frontend codebase, I feel like the design feels a bit unpolished. It is not bad, but there are a few elements that seem odd and out of place. I had a few ideas, and asked for help from a proper designer, but like many other things in this project, in the end, just ran out of time. One idea that could turn the frontend upside down was to present uploading jobs in a timeline, rather than just listing them. This could be visually appealing and if done correctly, very functional, as this application hangs around 2 things: photography and time.
 
         \subsection{Code quality}
         I pride myself in striving for quality code. I always try to code for myself in 2 years, having looked at 2 year old code and cringing at how bad it used to be. I obviously don't know everything and expect to still cringe in 2 years time. The point being, there are things about this project that I am not happy about in terms of code quality. For example, when using the threading module and running the job thread, I think it should have been implemented in a way that the job thread knows when the main application thread is stopped, because when sending a SIGINT to the main program, the threading modules throws an Exception from the join function.
 
         \subsection{The good bits}
         Ultimately, I made it work. The application is a proof of concept, but it works. I will be using it, personally while I rebuild it in a way I feel I could present it to the world.
-        The good side of having decoupled the frontend is that I can completely rewrite the backend while using the same frontend.
+        The good side of having decoupled the frontend is that I can completely rewrite the backend while using the same frontend, and vice-versa.
 
         \section{Personal Evaluation}
         As evidenced through a very long enhancements section (section \ref{sec:enhancements}), and a complete critical evaluation, there are a lot of things I wish I could have done with this project, so in a way it feels incomplete.
@@ -273,7 +273,7 @@ captionpos=b
         Apart from knowing the platform I was interfacing with really well (which admitedly I already did, being a user), I had to understand how the API works, I had to find the right libraries for the project, gain a deeper understanding of the Oauth flow, and then re-learn it since Flickr doesn't implement it exactly like the spec, only to then realise there is a library that does it for me, better than I was doing it at that point. Ups and downs, failures and successes, but such is the life of a developer.
 
         \subsection{The veredict}
-        In the end I am happy, but not satisfied with the current status of the project and hope to be able to continue work on it. I plan to either rework the parts that I'm not very happy with, or actually re-design the whole application taking into consideration everything mentioned before in the enhancements section. One interesting idea is to try to implement the project as a serverless function as a service application.
+        In the end I am happy, but not satisfied with the current status of the project and hope to be able to continue work on it. I plan to either rework the parts that I'm not very happy with, or actually re-design the whole application taking into consideration everything mentioned before in the enhancements section. One interesting idea is to try to implement the project as a serverless application in a FaaS (function as a service) platform.
         Ultimately this project shows a lot of promise, but because of some aspects, it doesn't completely deliver. I am commited to keep working on it and make it a full-fledged application.
 
         \bibliographystyle{ieeetr}
